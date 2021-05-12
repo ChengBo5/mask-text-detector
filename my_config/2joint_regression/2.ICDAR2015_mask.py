@@ -127,7 +127,7 @@ data = dict(
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-            dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
+            dict(type='Resize', img_scale=(1280, 720), keep_ratio=True),
             dict(type='RandomFlip', flip_ratio=0.5),
             dict(
                 type='Normalize',
@@ -149,7 +149,7 @@ data = dict(
             dict(type='LoadImageFromFile'),
             dict(
                 type='MultiScaleFlipAug',
-                img_scale=(1333, 800),
+                img_scale=(2000, 1400),
                 flip=False,
                 transforms=[
                     dict(type='Resize', keep_ratio=True),
@@ -173,7 +173,7 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=0.001,
     step=[150, 250])
-runner = dict(type='EpochBasedRunner', max_epochs=3)
+runner = dict(type='EpochBasedRunner', max_epochs=300)
 checkpoint_config = dict(interval=10)
 log_config = dict(interval=10, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
