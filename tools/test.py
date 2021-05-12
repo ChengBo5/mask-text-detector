@@ -185,7 +185,7 @@ def main():
         model.CLASSES = dataset.CLASSES
 
     if not distributed:
-        model = MMDataParallel(model, device_ids=[0])
+        model = MMDataParallel(model, device_ids=[1])
         outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
                                   args.show_score_thr)
     else:
@@ -196,24 +196,24 @@ def main():
         outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                  args.gpu_collect)
 
-    rank, _ = get_dist_info()
-    if rank == 0:
-        if args.out:
-            print(f'\nwriting results to {args.out}')
-            mmcv.dump(outputs, args.out)
-        kwargs = {} if args.eval_options is None else args.eval_options
-        if args.format_only:
-            dataset.format_results(outputs, **kwargs)
-        if args.eval:
-            eval_kwargs = cfg.get('evaluation', {}).copy()
-            # hard-code way to remove EvalHook args
-            for key in [
-                    'interval', 'tmpdir', 'start', 'gpu_collect', 'save_best',
-                    'rule'
-            ]:
-                eval_kwargs.pop(key, None)
-            eval_kwargs.update(dict(metric=args.eval, **kwargs))
-            print(dataset.evaluate(outputs, **eval_kwargs))
+    # rank, _ = get_dist_info()
+    # if rank == 0:
+    #     if args.out:
+    #         print(f'\nwriting results to {args.out}')
+    #         mmcv.dump(outputs, args.out)
+    #     kwargs = {} if args.eval_options is None else args.eval_options
+    #     if args.format_only:
+    #         dataset.format_results(outputs, **kwargs)
+    #     if args.eval:
+    #         eval_kwargs = cfg.get('evaluation', {}).copy()
+    #         # hard-code way to remove EvalHook args
+    #         for key in [
+    #                 'interval', 'tmpdir', 'start', 'gpu_collect', 'save_best',
+    #                 'rule'
+    #         ]:
+    #             eval_kwargs.pop(key, None)
+    #         eval_kwargs.update(dict(metric=args.eval, **kwargs))
+    #         print(dataset.evaluate(outputs, **eval_kwargs))
 
 
 if __name__ == '__main__':
