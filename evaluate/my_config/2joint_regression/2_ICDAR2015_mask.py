@@ -106,6 +106,7 @@ model = dict(
             pos_weight=-1,
             debug=False)),
     test_cfg=dict(
+        text_dataset_type='ICDAR2015',
         rpn=dict(
             nms_pre=1000,
             max_per_img=1000,
