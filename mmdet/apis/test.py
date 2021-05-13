@@ -48,12 +48,21 @@ def single_gpu_test(model,
                 else:
                     out_file = None
 
-                model.module.show_result(
+                point_box = model.module.show_result(
                     img_show,
                     result[i],
                     show=show,
                     out_file=out_file,
                     score_thr=show_score_thr)
+
+                # save predict results into txt
+                if model.module.test_cfg.text_dataset_type == 'ICDAR2015':
+                    from evaluate.visio.savedata import save_icdar2015_mask_box_txt
+                    save_icdar2015_mask_box_txt(point_box, img_meta, 'dataset/result/icdar2015_mask_box')
+
+                elif model.module.test_cfg.text_dataset_type == 'CTW1500':
+                    from evaluate.visio.savedata import save_ctw1500_mask_box_txt
+                    save_ctw1500_mask_box_txt(point_box, img_meta, 'dataset/result/ctw1500_mask_box')
 
         # encode mask results
         if isinstance(result[0], tuple):

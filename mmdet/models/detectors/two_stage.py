@@ -179,8 +179,20 @@ class TwoStageDetector(BaseDetector):
         else:
             proposal_list = proposals
 
-        return self.roi_head.simple_test(
-            x, proposal_list, img_metas, rescale=rescale)
+        #add code show rpn box
+        from evaluate.visio.savedata import save_icdar2015_rpn_image, save_icdar2015_rpn_box_txt
+        if self.test_cfg.text_dataset_type == 'ICDAR2015':
+            # save_icdar2015_rpn_image(proposal_list, img, img_metas, save_dir='dataset/result/icdar2015_rpn_img')
+            save_icdar2015_rpn_box_txt(proposal_list, img_metas, save_dir='dataset/result/icdar2015_rpn_box')        
+
+        results = self.roi_head.simple_test(x, proposal_list, img_metas, rescale=rescale)
+        from evaluate.visio.savedata import save_icdar2015_box_image, save_icdar2015_box_txt
+        if self.test_cfg.text_dataset_type == 'ICDAR2015':
+            temp_data = results[0][0][0]
+            # save_icdar2015_box_image(temp_data, img, img_metas, save_dir='dataset/result/icdar2015_box_img')
+            save_icdar2015_box_txt(results, img_metas, save_dir='dataset/result/icdar2015_box')
+
+        return results
 
     def aug_test(self, imgs, img_metas, rescale=False):
         """Test with augmentations.

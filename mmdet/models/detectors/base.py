@@ -310,12 +310,39 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
         labels = np.concatenate(labels)
         # draw segmentation masks
         segms = None
+        point_box = []
         if segm_result is not None and len(labels) > 0:  # non empty
             segms = mmcv.concat_list(segm_result)
             if isinstance(segms[0], torch.Tensor):
                 segms = torch.stack(segms, dim=0).detach().cpu().numpy()
             else:
                 segms = np.stack(segms, axis=0)
+
+            # add code 
+            for i in range(segms.shape[0]):
+                import cv2
+                if self.test_cfg.text_dataset_type == 'ICDAR2015':
+                    olt_mask = segms[i].astype(np.uint8).copy()
+                    countours, hier = cv2.findContours(olt_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+                    if len(countours) == 0:
+                        pass
+                    else:
+                        cv2.drawContours(img, countours, -1, (0, 255, 0), 1)
+                        # cv2.imwrite(out_file, img)
+                        quad = contour_to_xys(countours[0].copy(), olt_mask.shape)
+                        point_box.append(quad)
+
+                elif self.test_cfg.text_dataset_type == 'CTW1500':
+                    olt_mask = segms[i].astype(np.uint8).copy()
+                    countours, hier = cv2.findContours(olt_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+                    if len(countours) == 0:
+                        pass
+                    else:
+                        cv2.drawContours(img, countours, -1, (0, 255, 0), 1)
+                        # cv2.imwrite(out_file, img)
+                        quad = contour_to_valid(countours[0].copy(), olt_mask.shape)
+                        point_box.append(quad)
+
         # if out_file specified, do not show image in window
         if out_file is not None:
             show = False
@@ -339,3 +366,71 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
 
         if not (show or out_file):
             return img
+        else:
+            return point_box
+
+
+def contour_to_xys(cnt, image_shape):
+    """Convert rect to xys, i.e., eight points
+    The `image_shape` is used to to make sure all points return are valid, i.e., within image area
+    """
+    import cv2
+    import numpy as np
+
+    rect = cv2.minAreaRect(cnt)
+    h, w = image_shape[0:2]
+
+    def get_valid_x(x):
+        if x < 0:
+            return 0
+        if x >= w:
+            return w - 1
+        return x
+
+    def get_valid_y(y):
+        if y < 0:
+            return 0
+        if y >= h:
+            return h - 1
+        return y
+
+    points = cv2.boxPoints(rect)
+    points = np.int0(points)
+    for i_xy, (x, y) in enumerate(points):
+        x = get_valid_x(x)
+        y = get_valid_y(y)
+        points[i_xy, :] = [x, y]
+    points = np.reshape(points, -1)
+    return points
+
+
+def contour_to_valid(cnt, image_shape):
+    """Convert rect to xys, i.e., eight points
+    The `image_shape` is used to to make sure all points return are valid, i.e., within image area
+    """
+    # rect = cv2.minAreaRect(cnt)
+    if len(cnt.shape) != 3:
+        assert 1 < 0
+    rect = cnt.reshape([cnt.shape[0], cnt.shape[2]])
+    h, w = image_shape[0:2]
+
+    def get_valid_x(x):
+        if x < 0:
+            return 0
+        if x >= w:
+            return w - 1
+        return x
+
+    def get_valid_y(y):
+        if y < 0:
+            return 0
+        if y >= h:
+            return h - 1
+        return y
+    for i_xy, (x, y) in enumerate(rect):
+        x = get_valid_x(x)
+        y = get_valid_y(y)
+        rect[i_xy, :] = [x, y]
+
+    points = np.reshape(rect, -1)
+    return points
