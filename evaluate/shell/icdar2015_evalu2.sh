@@ -1,14 +1,16 @@
 #!/bin/bash
 
 py_dir="tools/test.py"
-cfg_dir="evaluate/my_config/2joint_regression/2_ICDAR2015_mask.py"
-weight_dir=("work_dirs/2_ICDAR2015_mask/epoch_50.pth" 
-            "work_dirs/2_ICDAR2015_mask/epoch_70.pth" 
-            "work_dirs/2_ICDAR2015_mask/epoch_120.pth" 
-            "work_dirs/2_ICDAR2015_mask/epoch_150.pth" 
-            "work_dirs/2_ICDAR2015_mask/epoch_200.pth")
+cfg_dir="evaluate/my_config/3anchor-free/3_ICDAR2015_anchor_free.py"
+weight_dir=("work_dirs/3_ICDAR2015_anchor_free/epoch_50.pth" 
+            "work_dirs/3_ICDAR2015_anchor_free/epoch_70.pth" 
+            "work_dirs/3_ICDAR2015_anchor_free/epoch_120.pth" 
+            "work_dirs/3_ICDAR2015_anchor_free/epoch_150.pth" 
+            "work_dirs/3_ICDAR2015_anchor_free/epoch_200.pth"
+            "work_dirs/3_ICDAR2015_anchor_free/epoch_250.pth" 
+            "work_dirs/3_ICDAR2015_anchor_free/epoch_300.pth")
 
-log_dir="dataset/result/txt/原本数据.txt"
+log_dir="dataset/result/txt/anchor_free_icdar2015.txt"
 
 fcos_score_thr_list=0.1
 fcos_iou_threshold_list=(0.9)
@@ -22,7 +24,7 @@ do
         for rcnn_score_thr in ${rcnn_score_thr_list[@]};
         do
             for weight_dir_ in ${weight_dir[@]};
-            do 
+            do
                 python $py_dir $cfg_dir $weight_dir_ --eval bbox --show-dir dataset/result/image_result\
                         # --cfg-options \
                         # test_cfg.rcnn.score_thr=$rcnn_score_thr \
