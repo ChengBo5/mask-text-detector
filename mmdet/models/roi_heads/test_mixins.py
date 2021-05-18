@@ -162,6 +162,7 @@ class BBoxTestMixin(object):
             bbox_pred,
             img_shapes,
             scale_factors,
+            img_metas,
             rescale=rescale,
             cfg=rcnn_test_cfg)
 
