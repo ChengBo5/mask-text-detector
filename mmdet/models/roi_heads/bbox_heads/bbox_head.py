@@ -239,6 +239,9 @@ class BBoxHead(BaseModule):
                     label_weights,
                     avg_factor=avg_factor,
                     reduction_override=reduction_override)
+                # add show positive box num
+                pos_inds = (labels >= 0) & (labels < self.num_classes)
+                losses['pos_num'] = pos_inds.type(torch.float32).sum()
                 losses['acc'] = accuracy(cls_score, labels)
         if bbox_pred is not None:
             bg_class_ind = self.num_classes
