@@ -92,8 +92,7 @@ def save_icdar2015_box_txt(results, img_metas, save_dir):
     if not os.path.exists(save_dir):               #判断文件夹是否存在
         os.makedirs(save_dir)                       #新建文件夹
 
-    bbox_results = results[0][0][0]
-    polys = np.array(bbox_results).reshape(-1, 5)
+    polys = np.array(results[0]).reshape(-1, 5)
     image_jjj = img_metas[0]['ori_filename'][0:-4]
     with open('{}'.format(os.path.join(save_dir, 'res_{}.txt'.format(image_jjj))), 'w') as f:
         for id in range(polys.shape[0]):
