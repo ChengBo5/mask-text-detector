@@ -404,23 +404,9 @@ class BBoxHead(BaseModule):
         det_labels = []
         for (bbox, score) in zip(bboxes, scores):
             if cfg is not None:
-                import numpy as np
-                import os
-                import cv2
-                save_dir = 'dataset/result/joint_regression'
-                if not os.path.exists(save_dir):               #判断文件夹是否存在
-                    os.makedirs(save_dir)                       #新建文件夹
-                image_name = img_metas[0]['ori_filename'][0:-4]
-                with open('{}'.format(os.path.join(save_dir, '{}.txt'.format(image_name))), 'w') as f:
-                    assert len(bbox) == len(score)
-                    save_class_boxs =  torch.cat((bbox.int(), score[:, :-1]), 1)
-                    for id in range(len(save_class_boxs)):
-                        # values = [int(v) for v in save_class_boxs[id]]
-                        for ii in range(len(save_class_boxs[id])):
-                            f.write('{}'.format(save_class_boxs[id][ii]))
-                            if ii < len(save_class_boxs[id]) - 1:
-                                f.write(', ')
-                        f.write('\n')
+                from evaluate.visio.savedata import save_all_box_class
+                # dataset (x1, y1, x2, y2, scores)
+                save_all_box_class(bbox, score, img_metas, 'dataset/result/all_boxes_scores')
                 det_bbox, det_label = multiclass_nms(bbox, score,
                                                      cfg.score_thr, cfg.nms,
                                                      cfg.max_per_img)
