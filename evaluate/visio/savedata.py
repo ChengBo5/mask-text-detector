@@ -203,6 +203,27 @@ def save_ctw1500_mask_box_txt(point_box, img_metas, save_dir):
                     f.write(', ')
             f.write('\n')
 
+
+#*****************************TotalText***********************************
+def save_TotalText_mask_box_txt(point_box, img_metas, save_dir):
+    if not os.path.exists(save_dir):               #判断文件夹是否存在
+        os.makedirs(save_dir)                       #新建文件夹
+
+    img_id = img_metas['ori_filename'][3:-4]
+    image_name = 'img{}.txt'.format(img_id)
+    with open('{}'.format(os.path.join(save_dir, image_name)), 'w') as f:
+        for id in range(len(point_box)):
+            if len(point_box[id]) < 4:
+                continue
+            bbox = point_box[id]
+            for idx, point in enumerate(bbox):
+                if idx == (len(bbox)-1):
+                    f.write('{},{}'.format(int(point[1]), int(point[0])))
+                else:
+                    f.write('{},{},'.format(int(point[1]), int(point[0])))
+            f.write('\n')
+
+
 #**********************************************************************
 def save_all_box_class(bbox, score, img_metas, save_dir):
     # save_dir = 'dataset/result/joint_regression'
