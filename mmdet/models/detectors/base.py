@@ -327,7 +327,7 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
                     if len(countours) == 0:
                         pass
                     else:
-                        cv2.drawContours(img, countours, -1, (0, 255, 0), 1)
+                        cv2.drawContours(img, countours, -1, (0, 255, 0), 3)
                         quad = contour_to_xys(countours[0].copy(), olt_mask.shape)
                         point_box.append(quad)
 
@@ -337,7 +337,7 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
                     if len(countours) == 0:
                         pass
                     else:
-                        cv2.drawContours(img, countours, -1, (0, 255, 0), 1)
+                        cv2.drawContours(img, countours, -1, (0, 255, 0), 3)
                         quad = contour_to_valid(countours[0].copy(), olt_mask.shape)
                         point_box.append(quad)
 
@@ -347,7 +347,7 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
                     if len(countours) == 0:
                         pass
                     else:
-                        cv2.drawContours(img, countours, -1, (0, 255, 0), 1)
+                        cv2.drawContours(img, countours, -1, (0, 255, 0), 3)
                         quad = countours[0].reshape(-1, 2)
                         point_box.append(quad)
             cv2.imwrite(out_file, img)

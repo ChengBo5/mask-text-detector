@@ -1,16 +1,16 @@
 #!/bin/bash
 
 py_dir="tools/test.py"
-cfg_dir="evaluate/my_config/3anchor-free/3_ICDAR2015_anchor_free.py"
-weight_dir=("work_dirs/3_ICDAR2015_anchor_free/epoch_50.pth" 
-            "work_dirs/3_ICDAR2015_anchor_free/epoch_70.pth" 
-            "work_dirs/3_ICDAR2015_anchor_free/epoch_120.pth" 
-            "work_dirs/3_ICDAR2015_anchor_free/epoch_150.pth" 
-            "work_dirs/3_ICDAR2015_anchor_free/epoch_200.pth"
-            "work_dirs/3_ICDAR2015_anchor_free/epoch_250.pth" 
-            "work_dirs/3_ICDAR2015_anchor_free/epoch_300.pth")
+cfg_dir="evaluate/my_config/2_mask_rcnn/2_mask_rcnn_ICDAR2013.py"
+weight_dir=("work_dirs/2_mask_rcnn_ICDAR2013/epoch_50.pth" 
+            "work_dirs/2_mask_rcnn_ICDAR2013/epoch_70.pth" 
+            "work_dirs/2_mask_rcnn_ICDAR2013/epoch_100.pth" 
+            "work_dirs/2_mask_rcnn_ICDAR2013/epoch_150.pth" 
+            "work_dirs/2_mask_rcnn_ICDAR2013/epoch_200.pth"
+            "work_dirs/2_mask_rcnn_ICDAR2013/epoch_250.pth" 
+            "work_dirs/2_mask_rcnn_ICDAR2013/epoch_300.pth")
 
-log_dir="dataset/result/txt/anchor_free_icdar2015.txt"
+log_dir="dataset/result/txt/2_mask_rcnn_ICDAR2013.txt"
 
 fcos_score_thr_list=0.1
 fcos_iou_threshold_list=(0.9)
@@ -25,10 +25,7 @@ do
         do
             for weight_dir_ in ${weight_dir[@]};
             do
-                python $py_dir $cfg_dir $weight_dir_ --eval bbox --show-dir dataset/result/image_result\
-                        # --cfg-options \
-                        # test_cfg.rcnn.score_thr=$rcnn_score_thr \
-                        # test_cfg.rcnn.nms.iou_threshold=$rcnn_iou_threshold
+                python $py_dir $cfg_dir $weight_dir_ --show-dir dataset/result/image_result
 
                 echo "*************rcnn_score_thr="$weight_dir_ >&1 | tee -a $log_dir ;
                 zip -jmq dataset/result/zip/icdar2013_rpn_box.zip dataset/result/icdar2013_rpn_box/* ;

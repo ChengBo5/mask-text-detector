@@ -2,6 +2,7 @@ import numpy as np
 import os
 import cv2
 import torch
+import mmcv
 
 def show_icdar2015_rpn_image(proposal_list, img):
     bbox_results = proposal_list[0].detach().cpu().numpy()
@@ -158,22 +159,6 @@ def save_icdar2013_rpn_box_txt(proposal_list, img_metas, save_dir):
                 int(x1), int(y1), int(x2), int(y2)))
 
 
-def save_icdar2013_box_txt(results, img_metas, save_dir):
-    if not os.path.exists(save_dir):               #判断文件夹是否存在
-        os.makedirs(save_dir)                       #新建文件夹
-
-    polys = np.array(results).reshape(-1, 5)
-    image_jjj = img_metas[0]['ori_filename'][0:-4]
-    with open('{}'.format(os.path.join(save_dir, 'res_{}.txt'.format(image_jjj))), 'w') as f:
-        for id in range(polys.shape[0]):
-            x1 = polys[id][0]
-            y1 = polys[id][1]
-            x2 = polys[id][2]
-            y2 = polys[id][3]
-            f.write('{}, {}, {}, {}\n'.format(
-                int(x1), int(y1), int(x2), int(y2)))
-
-
 def save_icdar2013_mask_box_txt(point_box, img_metas, save_dir):
     if not os.path.exists(save_dir):               #判断文件夹是否存在
         os.makedirs(save_dir)                       #新建文件夹
@@ -184,6 +169,21 @@ def save_icdar2013_mask_box_txt(point_box, img_metas, save_dir):
         for id in range(polys.shape[0]):
             f.write('{}, {}, {}, {}\n'.format(
                 int(polys[id][0]), int(polys[id][1]), int(polys[id][2]), int(polys[id][3])))
+
+
+def save_icdar2013_mask_box_image(boxes, img, out_file):
+    # if not os.path.exists(save_dir):               #判断文件夹是否存在
+    #     os.makedirs(save_dir)                       #新建文件夹
+    polys = boxes.reshape(-1, 4)
+    img = mmcv.imread(img)
+    image_source = img.copy()
+    for id in range(polys.shape[0]):
+        x1 = polys[id][0]
+        y1 = polys[id][1]
+        x2 = polys[id][2]
+        y2 = polys[id][3]
+        cv2.rectangle(image_source, (x1, y1), (x2, y2), (0, 255, 0), 3)
+    cv2.imwrite(out_file, image_source)
 
 
 #*****************************ctw1500***********************************

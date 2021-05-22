@@ -44,6 +44,7 @@ def single_gpu_test(model,
                 img_show = mmcv.imresize(img_show, (ori_w, ori_h))
 
                 if out_dir:
+                    import os
                     if not os.path.exists(out_dir):
                         os.makedirs(out_dir)
                     out_file = osp.join(out_dir, img_meta['ori_filename'])
@@ -67,7 +68,8 @@ def single_gpu_test(model,
                     save_ctw1500_mask_box_txt(point_box, img_meta, 'dataset/result/ctw1500_mask_box')
 
                 elif model.module.test_cfg.text_dataset_type == 'ICDAR2013':
-                    from evaluate.visio.savedata import save_icdar2013_mask_box_txt
+                    from evaluate.visio.savedata import save_icdar2013_mask_box_txt, save_icdar2013_mask_box_image
+                    save_icdar2013_mask_box_image(result[i][0][:, :4], img_show, out_file)
                     save_icdar2013_mask_box_txt(result[i][0][:, :4], img_meta, 'dataset/result/icdar2013_mask_box')
 
                 elif model.module.test_cfg.text_dataset_type == 'TotalText':
