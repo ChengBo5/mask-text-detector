@@ -58,6 +58,10 @@ class LoadImageFromFile(object):
 
         img_bytes = self.file_client.get(filename)
         img = mmcv.imfrombytes(img_bytes, flag=self.color_type)
+        # Modify some errors in the CTW1500 dataset
+        results['img_info']['height'] = img.shape[0]
+        results['img_info']['weight'] = img.shape[1]
+
         if self.to_float32:
             img = img.astype(np.float32)
 

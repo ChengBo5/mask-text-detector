@@ -61,19 +61,49 @@ class FCNMaskHead(BaseModule):
         self.fp16_enabled = False
         self.loss_mask = build_loss(loss_mask)
 
-        self.convs = ModuleList()
+        # self.convs = ModuleList()
+        # for i in range(self.num_convs):
+        #     in_channels = (
+        #         self.in_channels if i == 0 else self.conv_out_channels)
+        #     padding = (self.conv_kernel_size - 1) // 2
+        #     self.convs.append(
+        #         ConvModule(
+        #             in_channels,
+        #             self.conv_out_channels,
+        #             self.conv_kernel_size,
+        #             padding=padding,
+        #             conv_cfg=conv_cfg,
+        #             norm_cfg=norm_cfg))
+
+        self.convs_x = nn.ModuleList()
+        self.convs_y = nn.ModuleList()
+        self.convs_xy = nn.ModuleList()
         for i in range(self.num_convs):
-            in_channels = (
-                self.in_channels if i == 0 else self.conv_out_channels)
+            in_channels = (self.in_channels if i == 0 else self.conv_out_channels)
             padding = (self.conv_kernel_size - 1) // 2
-            self.convs.append(
-                ConvModule(
-                    in_channels,
-                    self.conv_out_channels,
-                    self.conv_kernel_size,
-                    padding=padding,
-                    conv_cfg=conv_cfg,
-                    norm_cfg=norm_cfg))
+            if i==0:
+                self.convs_x.append(ConvModule(in_channels, 64, (3, 1), padding=(1, 0),
+                        conv_cfg=conv_cfg, norm_cfg=norm_cfg))
+                self.convs_y.append(ConvModule(in_channels, 64, (1, 3), padding=(0, 1),
+                        conv_cfg=conv_cfg, norm_cfg=norm_cfg))
+                self.convs_xy.append(ConvModule(in_channels, 128, (3, 3), padding=(1, 1),
+                        conv_cfg=conv_cfg, norm_cfg=norm_cfg))
+            else:
+                self.convs_x.append(ConvModule(64, 64, (3, 1), padding=(1, 0),
+                        conv_cfg=conv_cfg, norm_cfg=norm_cfg))
+                self.convs_y.append(ConvModule(64, 64, (1, 3), padding=(0, 1),
+                        conv_cfg=conv_cfg, norm_cfg=norm_cfg))
+                self.convs_xy.append(ConvModule(128, 128, (3, 3), padding=(1, 1),
+                        conv_cfg=conv_cfg, norm_cfg=norm_cfg))
+
+        self.se = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1,1)),
+            nn.Conv2d(in_channels,in_channels//16,kernel_size=1),
+            nn.ReLU(),
+            nn.Conv2d(in_channels//16,in_channels,kernel_size=1),
+            nn.Sigmoid()
+        )
+
         upsample_in_channels = (
             self.conv_out_channels if self.num_convs > 0 else in_channels)
         upsample_cfg_ = self.upsample_cfg.copy()
@@ -122,14 +152,46 @@ class FCNMaskHead(BaseModule):
 
     @auto_fp16()
     def forward(self, x):
-        for conv in self.convs:
-            x = conv(x)
+        # for conv in self.convs:
+        #     x = conv(x)
+        # if self.upsample is not None:
+        #     x = self.upsample(x)
+        #     if self.upsample_method == 'deconv':
+        #         x = self.relu(x)
+        # mask_pred = self.conv_logits(x)
+        # return mask_pred
+
+        feat_x = self.convs_x[0](x)
+        feat_x = self.convs_x[1](feat_x)
+        feat_x = self.convs_x[2](feat_x)
+        feat_x = self.convs_x[3](feat_x)
+
+        feat_y = self.convs_y[0](x)
+        feat_y = self.convs_y[1](feat_y)
+        feat_y = self.convs_y[2](feat_y)
+        feat_y = self.convs_y[3](feat_y)
+
+        feat_xy = self.convs_xy[0](x)
+        feat_xy = self.convs_xy[1](feat_xy)
+        feat_xy = self.convs_xy[2](feat_xy)
+        feat_xy = self.convs_xy[3](feat_xy)
+
+        feat_total = torch.cat((feat_x, feat_y, feat_xy), 1)
+        channle_weights = self.se(feat_total)
+        feat_total = feat_total * channle_weights
+
         if self.upsample is not None:
-            x = self.upsample(x)
+            feat_total = self.upsample(feat_total)
             if self.upsample_method == 'deconv':
-                x = self.relu(x)
-        mask_pred = self.conv_logits(x)
+                feat_total = self.relu(feat_total)
+
+        mask_pred = self.conv_logits(feat_total)
         return mask_pred
+
+
+
+
+
 
     def get_targets(self, sampling_results, gt_masks, rcnn_train_cfg):
         pos_proposals = [res.pos_bboxes for res in sampling_results]

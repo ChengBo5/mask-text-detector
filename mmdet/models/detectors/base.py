@@ -327,8 +327,7 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
                     if len(countours) == 0:
                         pass
                     else:
-                        cv2.drawContours(img, countours, -1, (0, 255, 0), 1)
-                        # cv2.imwrite(out_file, img)
+                        cv2.drawContours(img, countours, -1, (0, 255, 0), 3)
                         quad = contour_to_xys(countours[0].copy(), olt_mask.shape)
                         point_box.append(quad)
 
@@ -338,31 +337,41 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
                     if len(countours) == 0:
                         pass
                     else:
-                        cv2.drawContours(img, countours, -1, (0, 255, 0), 1)
-                        # cv2.imwrite(out_file, img)
+                        cv2.drawContours(img, countours, -1, (0, 255, 0), 3)
                         quad = contour_to_valid(countours[0].copy(), olt_mask.shape)
                         point_box.append(quad)
+
+                elif self.test_cfg.text_dataset_type == 'TotalText':
+                    olt_mask = segms[i].astype(np.uint8).copy()
+                    countours, hier = cv2.findContours(olt_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+                    if len(countours) == 0:
+                        pass
+                    else:
+                        cv2.drawContours(img, countours, -1, (0, 255, 0), 3)
+                        quad = countours[0].reshape(-1, 2)
+                        point_box.append(quad)
+            cv2.imwrite(out_file, img)
 
         # if out_file specified, do not show image in window
         if out_file is not None:
             show = False
         # draw bounding boxes
-        img = imshow_det_bboxes(
-            img,
-            bboxes,
-            labels,
-            segms,
-            class_names=self.CLASSES,
-            score_thr=score_thr,
-            bbox_color=bbox_color,
-            text_color=text_color,
-            mask_color=mask_color,
-            thickness=thickness,
-            font_size=font_size,
-            win_name=win_name,
-            show=show,
-            wait_time=wait_time,
-            out_file=out_file)
+        # img = imshow_det_bboxes(
+        #     img,
+        #     bboxes,
+        #     labels,
+        #     segms,
+        #     class_names=self.CLASSES,
+        #     score_thr=score_thr,
+        #     bbox_color=bbox_color,
+        #     text_color=text_color,
+        #     mask_color=mask_color,
+        #     thickness=thickness,
+        #     font_size=font_size,
+        #     win_name=win_name,
+        #     show=show,
+        #     wait_time=wait_time,
+        #     out_file=out_file)
 
         if not (show or out_file):
             return img

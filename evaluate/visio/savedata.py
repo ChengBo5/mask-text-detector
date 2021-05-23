@@ -1,6 +1,8 @@
 import numpy as np
 import os
 import cv2
+import torch
+import mmcv
 
 def show_icdar2015_rpn_image(proposal_list, img):
     bbox_results = proposal_list[0].detach().cpu().numpy()
@@ -91,8 +93,7 @@ def save_icdar2015_box_txt(results, img_metas, save_dir):
     if not os.path.exists(save_dir):               #判断文件夹是否存在
         os.makedirs(save_dir)                       #新建文件夹
 
-    bbox_results = results[0][0][0]
-    polys = np.array(bbox_results).reshape(-1, 5)
+    polys = np.array(results[0]).reshape(-1, 5)
     image_jjj = img_metas[0]['ori_filename'][0:-4]
     with open('{}'.format(os.path.join(save_dir, 'res_{}.txt'.format(image_jjj))), 'w') as f:
         for id in range(polys.shape[0]):
@@ -139,6 +140,51 @@ def save_icdar2015_mask_box_txt(point_box, img_metas, save_dir):
                 int(polys[id][4]), int(polys[id][5]), int(polys[id][6]), int(polys[id][7])))
 
 
+#*****************************icdar2013***********************************
+def save_icdar2013_rpn_box_txt(proposal_list, img_metas, save_dir):
+    if not os.path.exists(save_dir):               #判断文件夹是否存在
+        os.makedirs(save_dir)                       #新建文件夹
+
+    bbox_results = proposal_list[0].detach().cpu().numpy()
+    polys = np.array(bbox_results).reshape(-1, 5)
+    image_jjj = img_metas[0]['ori_filename'][0:-4]
+    scale_factor = img_metas[0]['scale_factor']
+    with open('{}'.format(os.path.join(save_dir, 'res_{}.txt'.format(image_jjj))), 'w') as f:
+        for id in range(polys.shape[0]):
+            x1 = polys[id][0] / scale_factor[0]
+            y1 = polys[id][1] / scale_factor[1]
+            x2 = polys[id][2] / scale_factor[2]
+            y2 = polys[id][3] / scale_factor[3]
+            f.write('{}, {}, {}, {}\n'.format(
+                int(x1), int(y1), int(x2), int(y2)))
+
+
+def save_icdar2013_mask_box_txt(point_box, img_metas, save_dir):
+    if not os.path.exists(save_dir):               #判断文件夹是否存在
+        os.makedirs(save_dir)                       #新建文件夹
+
+    polys = np.array(point_box).reshape(-1, 4)
+    image_name = img_metas['ori_filename'][0:-4]
+    with open('{}'.format(os.path.join(save_dir, 'res_{}.txt'.format(image_name))), 'w') as f:
+        for id in range(polys.shape[0]):
+            f.write('{}, {}, {}, {}\n'.format(
+                int(polys[id][0]), int(polys[id][1]), int(polys[id][2]), int(polys[id][3])))
+
+
+def save_icdar2013_mask_box_image(boxes, img, out_file):
+    # if not os.path.exists(save_dir):               #判断文件夹是否存在
+    #     os.makedirs(save_dir)                       #新建文件夹
+    polys = boxes.reshape(-1, 4)
+    img = mmcv.imread(img)
+    image_source = img.copy()
+    for id in range(polys.shape[0]):
+        x1 = polys[id][0]
+        y1 = polys[id][1]
+        x2 = polys[id][2]
+        y2 = polys[id][3]
+        cv2.rectangle(image_source, (x1, y1), (x2, y2), (0, 255, 0), 3)
+    cv2.imwrite(out_file, image_source)
+
 
 #*****************************ctw1500***********************************
 def save_ctw1500_mask_box_txt(point_box, img_metas, save_dir):
@@ -157,3 +203,40 @@ def save_ctw1500_mask_box_txt(point_box, img_metas, save_dir):
                     f.write(', ')
             f.write('\n')
 
+
+#*****************************TotalText***********************************
+def save_TotalText_mask_box_txt(point_box, img_metas, save_dir):
+    if not os.path.exists(save_dir):               #判断文件夹是否存在
+        os.makedirs(save_dir)                       #新建文件夹
+
+    img_id = img_metas['ori_filename'][3:-4]
+    image_name = 'img{}.txt'.format(img_id)
+    with open('{}'.format(os.path.join(save_dir, image_name)), 'w') as f:
+        for id in range(len(point_box)):
+            if len(point_box[id]) < 4:
+                continue
+            bbox = point_box[id]
+            for idx, point in enumerate(bbox):
+                if idx == (len(bbox)-1):
+                    f.write('{},{}'.format(int(point[1]), int(point[0])))
+                else:
+                    f.write('{},{},'.format(int(point[1]), int(point[0])))
+            f.write('\n')
+
+
+#**********************************************************************
+def save_all_box_class(bbox, score, img_metas, save_dir):
+    # save_dir = 'dataset/result/joint_regression'
+    if not os.path.exists(save_dir):               #判断文件夹是否存在
+        os.makedirs(save_dir)                       #新建文件夹
+    image_name = img_metas[0]['ori_filename'][0:-4]
+    with open('{}'.format(os.path.join(save_dir, '{}.txt'.format(image_name))), 'w') as f:
+        assert len(bbox) == len(score)
+        save_class_boxs =  torch.cat((bbox.int(), score[:, :-1]), 1)
+        for id in range(len(save_class_boxs)):
+            # values = [int(v) for v in save_class_boxs[id]]
+            for ii in range(len(save_class_boxs[id])):
+                f.write('{}'.format(save_class_boxs[id][ii]))
+                if ii < len(save_class_boxs[id]) - 1:
+                    f.write(', ')
+            f.write('\n')

@@ -23,9 +23,9 @@ do
                         test_cfg.rcnn.nms.iou_threshold=$rcnn_iou_threshold
 
                 echo "*************rcnn_score_thr="$weight_dir_ >&1 | tee -a $log_dir ;
-                python evaluate/ctw1500_evalu/eval_ctw1500.py >&1 | tee -a $log_dir
+                python evaluate/CTW1500/eval_ctw1500.py >&1 | tee -a $log_dir
                 echo -e >&1 | tee -a $log_dir
-                rm -rf evaluate/ctw1500_evalu/predict1/*
+                rm -rf dataset/result/ctw1500_mask_box/*
             done
             echo -e >> $log_dir
             echo -e >> $log_dir
