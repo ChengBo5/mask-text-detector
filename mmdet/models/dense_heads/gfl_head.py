@@ -457,12 +457,18 @@ class GFLHead(AnchorHead):
 
         if with_nms:
             det_results = []
+            from mmcv.ops import batched_nms
             for (mlvl_bboxes, mlvl_scores) in zip(batch_mlvl_bboxes,
                                                   batch_mlvl_scores):
-                det_bbox, det_label = multiclass_nms(mlvl_bboxes, mlvl_scores,
-                                                     cfg.score_thr, cfg.nms,
-                                                     cfg.max_per_img)
-                det_results.append(tuple([det_bbox, det_label]))
+                # det_bbox, det_label = multiclass_nms(mlvl_bboxes, mlvl_scores,
+                #                                      cfg.score_thr, cfg.nms,
+                #                                      cfg.max_per_img)
+                # det_results.append(tuple([det_bbox, det_label]))
+
+                ids = torch.zeros_like(mlvl_scores[:, 0]).cuda(mlvl_bboxes.device)
+                dets, keep = batched_nms(mlvl_bboxes, mlvl_scores[:, 0].contiguous(), ids, cfg.nms)
+                det_results.append(dets[:cfg.max_per_img])
+                
         else:
             det_results = [
                 tuple(mlvl_bs)
