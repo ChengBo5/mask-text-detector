@@ -130,7 +130,7 @@ class TwoStageDetector(BaseDetector):
                 x,
                 img_metas,
                 gt_bboxes,
-                gt_labels=None,
+                gt_labels=gt_labels,
                 gt_bboxes_ignore=gt_bboxes_ignore,
                 proposal_cfg=proposal_cfg)
             losses.update(rpn_losses)
@@ -180,17 +180,22 @@ class TwoStageDetector(BaseDetector):
             proposal_list = proposals
 
         #add code show rpn box
-        from evaluate.visio.savedata import save_icdar2015_rpn_image, save_icdar2015_rpn_box_txt
         if self.test_cfg.text_dataset_type == 'ICDAR2015':
+            from evaluate.visio.savedata import save_icdar2015_rpn_image, save_icdar2015_rpn_box_txt
             # save_icdar2015_rpn_image(proposal_list, img, img_metas, save_dir='dataset/result/icdar2015_rpn_img')
-            save_icdar2015_rpn_box_txt(proposal_list, img_metas, save_dir='dataset/result/icdar2015_rpn_box')        
+            save_icdar2015_rpn_box_txt(proposal_list, img_metas, save_dir='dataset/result/icdar2015_rpn_box')
+        if self.test_cfg.text_dataset_type == 'ICDAR2013':
+            from evaluate.visio.savedata import save_icdar2013_rpn_box_txt
+            save_icdar2013_rpn_box_txt(proposal_list, img_metas, save_dir='dataset/result/icdar2013_rpn_box')      
 
         results = self.roi_head.simple_test(x, proposal_list, img_metas, rescale=rescale)
-        from evaluate.visio.savedata import save_icdar2015_box_image, save_icdar2015_box_txt
         if self.test_cfg.text_dataset_type == 'ICDAR2015':
-            temp_data = results[0][0][0]
+            from evaluate.visio.savedata import save_icdar2015_box_image, save_icdar2015_box_txt
             # save_icdar2015_box_image(temp_data, img, img_metas, save_dir='dataset/result/icdar2015_box_img')
-            save_icdar2015_box_txt(results, img_metas, save_dir='dataset/result/icdar2015_box')
+            save_icdar2015_box_txt(results[0][0], img_metas, save_dir='dataset/result/icdar2015_box')
+        # if self.test_cfg.text_dataset_type == 'ICDAR2013':
+        #     from evaluate.visio.savedata import save_icdar2013_box_txt
+        #     save_icdar2013_box_txt(results[0][0], img_metas, save_dir='dataset/result/icdar2013_box')
 
         return results
 
