@@ -52,19 +52,20 @@ model = dict(
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
-        mask_roi_extractor=dict(
-            type='SingleRoIExtractor',
-            roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
-            out_channels=256,
-            featmap_strides=[4, 8, 16, 32]),
-        mask_head=dict(
-            type='FCNMaskHead',
-            num_convs=4,
-            in_channels=256,
-            conv_out_channels=256,
-            num_classes=1,
-            loss_mask=dict(
-                type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))),
+        # mask_roi_extractor=dict(
+        #     type='SingleRoIExtractor',
+        #     roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
+        #     out_channels=256,
+        #     featmap_strides=[4, 8, 16, 32]),
+        # mask_head=dict(
+        #     type='FCNMaskHead',
+        #     num_convs=4,
+        #     in_channels=256,
+        #     conv_out_channels=256,
+        #     num_classes=1,
+        #     loss_mask=dict(
+        #         type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))
+                ),
     train_cfg=dict(
         rpn=dict(
             assigner=dict(type='ATSSAssigner', topk=9),
@@ -94,14 +95,14 @@ model = dict(
             pos_weight=-1,
             debug=False)),
     test_cfg=dict(
-        text_dataset_type='ICDAR2015',
+        text_dataset_type='ICDAR2013',
         rpn=dict(
             nms_pre=1000,
             max_per_img=1000,
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
         rcnn=dict(
-            score_thr=0.2,
+            score_thr=0.05,
             nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=100,
             mask_thr_binary=0.5)))
@@ -110,12 +111,12 @@ data = dict(
     workers_per_gpu=2,
     train=dict(
         type='CocoDataset',
-        ann_file='dataset/IC2015/IC2015_annotations/ICDAR2015_train_ignore.json',
-        img_prefix='dataset/IC2015/IC2015_train_image',
+        ann_file='dataset/IC2013/IC2013_train.json',
+        img_prefix='dataset/IC2013/IC2013_train_images',
         classes=['text'],
         pipeline=[
             dict(type='LoadImageFromFile'),
-            dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+            dict(type='LoadAnnotations', with_bbox=True, with_mask=False),
             dict(type='Resize', img_scale=(1280, 720), keep_ratio=True),
             dict(type='RandomFlip', flip_ratio=0.5),
             dict(
@@ -127,12 +128,12 @@ data = dict(
             dict(type='DefaultFormatBundle'),
             dict(
                 type='Collect',
-                keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'])
+                keys=['img', 'gt_bboxes', 'gt_labels'])
         ]),
     test=dict(
         type='CocoDataset',
-        ann_file='dataset/IC2015/IC2015_annotations/ICDAR2015_test_ignore.json',
-        img_prefix='dataset/IC2015/IC2015_test_image',
+        ann_file='dataset/IC2013/IC2013_test.json',
+        img_prefix='dataset/IC2013/IC2013_test_images',
         classes=['text'],
         pipeline=[
             dict(type='LoadImageFromFile'),
