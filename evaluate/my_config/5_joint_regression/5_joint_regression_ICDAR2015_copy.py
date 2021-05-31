@@ -49,7 +49,7 @@ model = dict(
                 target_means=[0.0, 0.0, 0.0, 0.0],
                 target_stds=[0.1, 0.1, 0.2, 0.2]),
             reg_class_agnostic=False,
-            loss_cls=dict(type='QualityFocalLoss', use_sigmoid=True, beta=1.2, loss_weight=1.0),
+            loss_cls=dict(type='QualityFocalLoss', use_sigmoid=True, beta=1.2, loss_weight=2.0),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
         mask_roi_extractor=dict(
             type='SingleRoIExtractor',
