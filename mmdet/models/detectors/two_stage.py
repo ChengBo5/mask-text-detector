@@ -130,7 +130,7 @@ class TwoStageDetector(BaseDetector):
                 x,
                 img_metas,
                 gt_bboxes,
-                gt_labels=None,
+                gt_labels=gt_labels,
                 gt_bboxes_ignore=gt_bboxes_ignore,
                 proposal_cfg=proposal_cfg)
             losses.update(rpn_losses)
@@ -168,6 +168,7 @@ class TwoStageDetector(BaseDetector):
         assert self.with_bbox, 'Bbox head must be implemented.'
 
         x = self.extract_feat(img)
+        outs = self.rpn_head(x)
 
         # get origin input shape to onnx dynamic input shape
         if torch.onnx.is_in_onnx_export():
@@ -175,7 +176,7 @@ class TwoStageDetector(BaseDetector):
             img_metas[0]['img_shape_for_onnx'] = img_shape
 
         if proposals is None:
-            proposal_list = self.rpn_head.simple_test_rpn(x, img_metas)
+            proposal_list = self.rpn_head.get_bboxes(*outs, img_metas)
         else:
             proposal_list = proposals
 

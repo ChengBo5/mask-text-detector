@@ -16,21 +16,21 @@ model = dict(
         out_channels=256,
         num_outs=5),
     rpn_head=dict(
-        type='RPNHead',
+        type='GFLHead',
+        num_classes=1,
         in_channels=256,
+        stacked_convs=1,
         feat_channels=256,
         anchor_generator=dict(
             type='AnchorGenerator',
-            scales=[8],
-            ratios=[0.5, 1.0, 2.0],
+            ratios=[1.0],
+            octave_base_scale=8,
+            scales_per_octave=1,
             strides=[4, 8, 16, 32, 64]),
-        bbox_coder=dict(
-            type='DeltaXYWHBBoxCoder',
-            target_means=[0.0, 0.0, 0.0, 0.0],
-            target_stds=[1.0, 1.0, 1.0, 1.0]),
-        loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        loss_cls=dict(type='QualityFocalLoss', use_sigmoid=True, beta=2.0, loss_weight=1.0),
+        loss_dfl=dict(type='DistributionFocalLoss', loss_weight=0.25),
+        reg_max=16,
+        loss_bbox=dict(type='GIoULoss', loss_weight=1.0)),
     roi_head=dict(
         type='StandardRoIHead',
         bbox_roi_extractor=dict(
@@ -49,7 +49,7 @@ model = dict(
                 target_means=[0.0, 0.0, 0.0, 0.0],
                 target_stds=[0.1, 0.1, 0.2, 0.2]),
             reg_class_agnostic=False,
-            loss_cls=dict(type='QualityFocalLoss', use_sigmoid=True, beta=1.2, loss_weight=1.0),
+            loss_cls=dict(type='QualityFocalLoss', use_sigmoid=True, beta=1.1, loss_weight=2.0),
             loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
         mask_roi_extractor=dict(
             type='SingleRoIExtractor',
@@ -66,26 +66,14 @@ model = dict(
                 type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))),
     train_cfg=dict(
         rpn=dict(
-            assigner=dict(
-                type='MaxIoUAssigner',
-                pos_iou_thr=0.7,
-                neg_iou_thr=0.3,
-                min_pos_iou=0.3,
-                match_low_quality=True,
-                ignore_iof_thr=-1),
-            sampler=dict(
-                type='RandomSampler',
-                num=256,
-                pos_fraction=0.5,
-                neg_pos_ub=-1,
-                add_gt_as_proposals=False),
+            assigner=dict(type='ATSSAssigner', topk=9),
             allowed_border=-1,
             pos_weight=-1,
             debug=False),
         rpn_proposal=dict(
             nms_pre=2000,
             max_per_img=1000,
-            nms=dict(type='nms', iou_threshold=0.7),
+            nms=dict(type='nms', iou_threshold=0.9),
             min_bbox_size=0),
         rcnn=dict(
             assigner=dict(
@@ -109,10 +97,10 @@ model = dict(
         rpn=dict(
             nms_pre=1000,
             max_per_img=1000,
-            nms=dict(type='nms', iou_threshold=0.7),
+            nms=dict(type='nms', iou_threshold=0.9),
             min_bbox_size=0),
         rcnn=dict(
-            score_thr=0.05,
+            score_thr=0.7,
             nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=100,
             mask_thr_binary=0.5)))
@@ -127,7 +115,13 @@ data = dict(
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-            dict(type='Resize', img_scale=(1280, 720), keep_ratio=True),
+            # dict(type='Resize', img_scale=(1280, 720), keep_ratio=True),
+            dict(
+                type='Resize',
+                img_scale=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
+                        (1333, 768), (1333, 800)],
+                multiscale_mode='value',
+                keep_ratio=True),
             dict(type='RandomFlip', flip_ratio=0.5),
             dict(
                 type='Normalize',
